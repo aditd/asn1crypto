@@ -275,6 +275,7 @@ class SignedDigestAlgorithmId(ObjectIdentifier):
         # RFC 8410 -- https://tools.ietf.org/html/rfc8410
         '1.3.101.112': 'ed25519',
         '1.3.101.113': 'ed448',
+        '1.3.6.1.4.1.2.267.7.4.4':'dilithium2',
     }
 
     _reverse_map = {
@@ -314,6 +315,7 @@ class SignedDigestAlgorithmId(ObjectIdentifier):
         'sha3_512_rsa': '2.16.840.1.101.3.4.3.16',
         'ed25519': '1.3.101.112',
         'ed448': '1.3.101.113',
+        'dilithium2':'1.3.6.1.4.1.2.267.7.4.4',
     }
 
 
@@ -374,6 +376,7 @@ class SignedDigestAlgorithm(_ForceNullParameters, Sequence):
             'ecdsa': 'ecdsa',
             'ed25519': 'ed25519',
             'ed448': 'ed448',
+            'dilithium2':'dilithium2',
         }
         if algorithm in algo_map:
             return algo_map[algorithm]
