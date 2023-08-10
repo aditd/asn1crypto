@@ -104,6 +104,15 @@ class RSAPublicKey(Sequence):
     ]
 
 
+class DilithiumTwoPublicKey(OctetBitString):
+    """
+    
+    """
+
+    pass
+
+
+
 class DSAPrivateKey(Sequence):
     """
     The ASN.1 structure that OpenSSL uses to store a DSA private key that is
@@ -671,6 +680,7 @@ class PrivateKeyAlgorithmId(ObjectIdentifier):
         '1.3.101.111': 'x448',
         '1.3.101.112': 'ed25519',
         '1.3.101.113': 'ed448',
+        '1.3.6.1.4.1.2.267.7.4.4':'dilithium2', # OID used in the liboqs fork
     }
 
 
@@ -718,6 +728,7 @@ class PrivateKeyInfo(Sequence):
             'x448': OctetString,
             'ed25519': OctetString,
             'ed448': OctetString,
+            'dilithium2':OctetString,
         }[algorithm]
 
     _spec_callbacks = {
@@ -1033,6 +1044,7 @@ class PublicKeyAlgorithmId(ObjectIdentifier):
         '1.3.101.111': 'x448',
         '1.3.101.112': 'ed25519',
         '1.3.101.113': 'ed448',
+        '1.3.6.1.4.1.2.267.7.4.4':'dilithium2',
     }
 
 
@@ -1070,6 +1082,7 @@ class PublicKeyInfo(Sequence):
 
     def _public_key_spec(self):
         algorithm = self['algorithm']['algorithm'].native
+        ## this will returm the type of subjectPUblicKey
         return {
             'rsa': RSAPublicKey,
             'rsaes_oaep': RSAPublicKey,
@@ -1085,6 +1098,7 @@ class PublicKeyInfo(Sequence):
             'x448': (OctetBitString, None),
             'ed25519': (OctetBitString, None),
             'ed448': (OctetBitString, None),
+            'dilithium2':(OctetBitString, None),
         }[algorithm]
 
     _spec_callbacks = {
@@ -1120,23 +1134,25 @@ class PublicKeyInfo(Sequence):
                 type_name(public_key)
             ))
 
-        if algorithm != 'rsa' and algorithm != 'rsassa_pss':
-            raise ValueError(unwrap(
-                '''
-                algorithm must "rsa", not %s
-                ''',
-                repr(algorithm)
-            ))
-
+        # if algorithm != 'rsa' and algorithm != 'rsassa_pss':
+        #     raise ValueError(unwrap(
+        #         '''
+        #         algorithm must "rsa", not %s
+        #         ''',
+        #         repr(algorithm)
+        #     ))
+        
         algo = PublicKeyAlgorithm()
         algo['algorithm'] = PublicKeyAlgorithmId(algorithm)
-        algo['parameters'] = Null()
+        if algorithm !='dilithium2':
+            algo['parameters'] = Null()
 
         container = cls()
         container['algorithm'] = algo
         if isinstance(public_key, Asn1Value):
             public_key = public_key.untag().dump()
         container['public_key'] = ParsableOctetBitString(public_key)
+        # container['public_key'] = OctetBitString(public_key)
 
         return container
 

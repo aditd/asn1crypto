@@ -3409,6 +3409,12 @@ class Sequence(Asn1Value):
                 # OID-based specs. Otherwise sometimes the value would be processed
                 # before the OID field, resulting in invalid value object creation.
                 if self._fields:
+                    # example with class PublicKeyInfo(Sequence):
+                    # _fields = [
+                    #     ('algorithm', PublicKeyAlgorithm),
+                    #     ('public_key', ParsableOctetBitString),
+                    # ]
+                    # keys willl be [algorith]
                     keys = [info[0] for info in self._fields]
                     unused_keys = set(value.keys())
                 else:
