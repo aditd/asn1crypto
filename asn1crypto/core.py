@@ -56,12 +56,13 @@ import math
 import re
 import sys
 
-from . import _teletex_codec
+from collections import OrderedDict
 from ._errors import unwrap
-from ._ordereddict import OrderedDict
+# from ._ordereddict import OrderedDict
 from ._types import type_name, str_cls, byte_cls, int_types, chr_cls
 from .parser import _parse, _dump_header
 from .util import int_to_bytes, int_from_bytes, timezone, extended_datetime, create_timezone, utc_with_dst
+
 
 if sys.version_info <= (3,):
     from cStringIO import StringIO as BytesIO
@@ -75,7 +76,6 @@ else:
     _PY2 = False
 
 
-_teletex_codec.register()
 
 
 CLASS_NUM_TO_NAME_MAP = {
@@ -3394,6 +3394,7 @@ class Sequence(Asn1Value):
         Asn1Value.__init__(self, **kwargs)
 
         check_existing = False
+        # the value will probably be a dictionary
         if value is None and default is not None:
             check_existing = True
             if self.children is None:
@@ -3414,7 +3415,7 @@ class Sequence(Asn1Value):
                     #     ('algorithm', PublicKeyAlgorithm),
                     #     ('public_key', ParsableOctetBitString),
                     # ]
-                    # keys willl be [algorith]
+                    # keys willl be ['algorithm', 'public_key']
                     keys = [info[0] for info in self._fields]
                     unused_keys = set(value.keys())
                 else:
@@ -3430,7 +3431,9 @@ class Sequence(Asn1Value):
                             if key in unused_keys:
                                 unused_keys.remove(key)
                             continue
-
+                    # if the field as mentioned in the definition is there, then assign that
+                    # field to have the value passed in the argument
+                    # after that, consider the field to be filled 
                     if key in value:
                         self.__setitem__(key, value[key])
                         unused_keys.remove(key)

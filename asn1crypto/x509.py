@@ -25,10 +25,20 @@ import sys
 import unicodedata
 
 from ._errors import unwrap
-from ._iri import iri_to_uri, uri_to_iri
-from ._ordereddict import OrderedDict
+
+## uses in URI
+# from ._iri import iri_to_uri, uri_to_iri
+
+# below is used in Name
+# from ._ordereddict import OrderedDict
+from collections import OrderedDict
+# _types doesnt use anything from asn
 from ._types import type_name, str_cls, bytes_to_list
-from .algos import AlgorithmIdentifier, AnyAlgorithmIdentifier, DigestAlgorithm, SignedDigestAlgorithm
+
+# algos uses _errors and .core
+# from .algos import AlgorithmIdentifier, AnyAlgorithmIdentifier, DigestAlgorithm, SignedDigestAlgorithm
+
+# core uses parser, _ordereddict, _errors, util,_teletex_codec
 from .core import (
     Any,
     BitString,
@@ -59,8 +69,13 @@ from .core import (
     VisibleString,
     VOID,
 )
-from .keys import PublicKeyInfo
-from .util import int_to_bytes, int_from_bytes, inet_ntop, inet_pton
+
+# uses _types, algos, core, _errors, util
+from .keys import PublicKeyInfo, AlgorithmIdentifier, AnyAlgorithmIdentifier, DigestAlgorithm, SignedDigestAlgorithm
+
+
+# used for IP Address
+# from .util import int_to_bytes, int_from_bytes, inet_ntop, inet_pton
 
 
 # The structures in this file are taken from https://tools.ietf.org/html/rfc5280
@@ -121,61 +136,61 @@ class DNSName(IA5String):
             self._trailer = b''
 
 
-class URI(IA5String):
+# class URI(IA5String):
 
-    def set(self, value):
-        """
-        Sets the value of the string
+#     def set(self, value):
+#         """
+#         Sets the value of the string
 
-        :param value:
-            A unicode string
-        """
+#         :param value:
+#             A unicode string
+#         """
 
-        if not isinstance(value, str_cls):
-            raise TypeError(unwrap(
-                '''
-                %s value must be a unicode string, not %s
-                ''',
-                type_name(self),
-                type_name(value)
-            ))
+#         if not isinstance(value, str_cls):
+#             raise TypeError(unwrap(
+#                 '''
+#                 %s value must be a unicode string, not %s
+#                 ''',
+#                 type_name(self),
+#                 type_name(value)
+#             ))
 
-        self._unicode = value
-        self.contents = iri_to_uri(value)
-        self._header = None
-        if self._trailer != b'':
-            self._trailer = b''
+#         self._unicode = value
+#         self.contents = iri_to_uri(value)
+#         self._header = None
+#         if self._trailer != b'':
+#             self._trailer = b''
 
-    def __ne__(self, other):
-        return not self == other
+#     def __ne__(self, other):
+#         return not self == other
 
-    def __eq__(self, other):
-        """
-        Equality as defined by https://tools.ietf.org/html/rfc5280#section-7.4
+#     def __eq__(self, other):
+#         """
+#         Equality as defined by https://tools.ietf.org/html/rfc5280#section-7.4
 
-        :param other:
-            Another URI object
+#         :param other:
+#             Another URI object
 
-        :return:
-            A boolean
-        """
+#         :return:
+#             A boolean
+#         """
 
-        if not isinstance(other, URI):
-            return False
+#         if not isinstance(other, URI):
+#             return False
 
-        return iri_to_uri(self.native, True) == iri_to_uri(other.native, True)
+#         return iri_to_uri(self.native, True) == iri_to_uri(other.native, True)
 
-    def __unicode__(self):
-        """
-        :return:
-            A unicode string
-        """
+#     def __unicode__(self):
+#         """
+#         :return:
+#             A unicode string
+#         """
 
-        if self.contents is None:
-            return ''
-        if self._unicode is None:
-            self._unicode = uri_to_iri(self._merge_chunks())
-        return self._unicode
+#         if self.contents is None:
+#             return ''
+#         if self._unicode is None:
+#             self._unicode = uri_to_iri(self._merge_chunks())
+#         return self._unicode
 
 
 class EmailAddress(IA5String):
@@ -291,137 +306,137 @@ class EmailAddress(IA5String):
         return True
 
 
-class IPAddress(OctetString):
-    def parse(self, spec=None, spec_params=None):
-        """
-        This method is not applicable to IP addresses
-        """
+# class IPAddress(OctetString):
+#     def parse(self, spec=None, spec_params=None):
+#         """
+#         This method is not applicable to IP addresses
+#         """
 
-        raise ValueError(unwrap(
-            '''
-            IP address values can not be parsed
-            '''
-        ))
+#         raise ValueError(unwrap(
+#             '''
+#             IP address values can not be parsed
+#             '''
+#         ))
 
-    def set(self, value):
-        """
-        Sets the value of the object
+#     def set(self, value):
+#         """
+#         Sets the value of the object
 
-        :param value:
-            A unicode string containing an IPv4 address, IPv4 address with CIDR,
-            an IPv6 address or IPv6 address with CIDR
-        """
+#         :param value:
+#             A unicode string containing an IPv4 address, IPv4 address with CIDR,
+#             an IPv6 address or IPv6 address with CIDR
+#         """
 
-        if not isinstance(value, str_cls):
-            raise TypeError(unwrap(
-                '''
-                %s value must be a unicode string, not %s
-                ''',
-                type_name(self),
-                type_name(value)
-            ))
+#         if not isinstance(value, str_cls):
+#             raise TypeError(unwrap(
+#                 '''
+#                 %s value must be a unicode string, not %s
+#                 ''',
+#                 type_name(self),
+#                 type_name(value)
+#             ))
 
-        original_value = value
+#         original_value = value
 
-        has_cidr = value.find('/') != -1
-        cidr = 0
-        if has_cidr:
-            parts = value.split('/', 1)
-            value = parts[0]
-            cidr = int(parts[1])
-            if cidr < 0:
-                raise ValueError(unwrap(
-                    '''
-                    %s value contains a CIDR range less than 0
-                    ''',
-                    type_name(self)
-                ))
+#         has_cidr = value.find('/') != -1
+#         cidr = 0
+#         if has_cidr:
+#             parts = value.split('/', 1)
+#             value = parts[0]
+#             cidr = int(parts[1])
+#             if cidr < 0:
+#                 raise ValueError(unwrap(
+#                     '''
+#                     %s value contains a CIDR range less than 0
+#                     ''',
+#                     type_name(self)
+#                 ))
 
-        if value.find(':') != -1:
-            family = socket.AF_INET6
-            if cidr > 128:
-                raise ValueError(unwrap(
-                    '''
-                    %s value contains a CIDR range bigger than 128, the maximum
-                    value for an IPv6 address
-                    ''',
-                    type_name(self)
-                ))
-            cidr_size = 128
-        else:
-            family = socket.AF_INET
-            if cidr > 32:
-                raise ValueError(unwrap(
-                    '''
-                    %s value contains a CIDR range bigger than 32, the maximum
-                    value for an IPv4 address
-                    ''',
-                    type_name(self)
-                ))
-            cidr_size = 32
+#         if value.find(':') != -1:
+#             family = socket.AF_INET6
+#             if cidr > 128:
+#                 raise ValueError(unwrap(
+#                     '''
+#                     %s value contains a CIDR range bigger than 128, the maximum
+#                     value for an IPv6 address
+#                     ''',
+#                     type_name(self)
+#                 ))
+#             cidr_size = 128
+#         else:
+#             family = socket.AF_INET
+#             if cidr > 32:
+#                 raise ValueError(unwrap(
+#                     '''
+#                     %s value contains a CIDR range bigger than 32, the maximum
+#                     value for an IPv4 address
+#                     ''',
+#                     type_name(self)
+#                 ))
+#             cidr_size = 32
 
-        cidr_bytes = b''
-        if has_cidr:
-            cidr_mask = '1' * cidr
-            cidr_mask += '0' * (cidr_size - len(cidr_mask))
-            cidr_bytes = int_to_bytes(int(cidr_mask, 2))
-            cidr_bytes = (b'\x00' * ((cidr_size // 8) - len(cidr_bytes))) + cidr_bytes
+#         cidr_bytes = b''
+#         if has_cidr:
+#             cidr_mask = '1' * cidr
+#             cidr_mask += '0' * (cidr_size - len(cidr_mask))
+#             cidr_bytes = int_to_bytes(int(cidr_mask, 2))
+#             cidr_bytes = (b'\x00' * ((cidr_size // 8) - len(cidr_bytes))) + cidr_bytes
 
-        self._native = original_value
-        self.contents = inet_pton(family, value) + cidr_bytes
-        self._bytes = self.contents
-        self._header = None
-        if self._trailer != b'':
-            self._trailer = b''
+#         self._native = original_value
+#         self.contents = inet_pton(family, value) + cidr_bytes
+#         self._bytes = self.contents
+#         self._header = None
+#         if self._trailer != b'':
+#             self._trailer = b''
 
-    @property
-    def native(self):
-        """
-        The native Python datatype representation of this value
+#     @property
+#     def native(self):
+#         """
+#         The native Python datatype representation of this value
 
-        :return:
-            A unicode string or None
-        """
+#         :return:
+#             A unicode string or None
+#         """
 
-        if self.contents is None:
-            return None
+#         if self.contents is None:
+#             return None
 
-        if self._native is None:
-            byte_string = self.__bytes__()
-            byte_len = len(byte_string)
-            value = None
-            cidr_int = None
-            if byte_len in set([32, 16]):
-                value = inet_ntop(socket.AF_INET6, byte_string[0:16])
-                if byte_len > 16:
-                    cidr_int = int_from_bytes(byte_string[16:])
-            elif byte_len in set([8, 4]):
-                value = inet_ntop(socket.AF_INET, byte_string[0:4])
-                if byte_len > 4:
-                    cidr_int = int_from_bytes(byte_string[4:])
-            if cidr_int is not None:
-                cidr_bits = '{0:b}'.format(cidr_int)
-                cidr = len(cidr_bits.rstrip('0'))
-                value = value + '/' + str_cls(cidr)
-            self._native = value
-        return self._native
+#         if self._native is None:
+#             byte_string = self.__bytes__()
+#             byte_len = len(byte_string)
+#             value = None
+#             cidr_int = None
+#             if byte_len in set([32, 16]):
+#                 value = inet_ntop(socket.AF_INET6, byte_string[0:16])
+#                 if byte_len > 16:
+#                     cidr_int = int_from_bytes(byte_string[16:])
+#             elif byte_len in set([8, 4]):
+#                 value = inet_ntop(socket.AF_INET, byte_string[0:4])
+#                 if byte_len > 4:
+#                     cidr_int = int_from_bytes(byte_string[4:])
+#             if cidr_int is not None:
+#                 cidr_bits = '{0:b}'.format(cidr_int)
+#                 cidr = len(cidr_bits.rstrip('0'))
+#                 value = value + '/' + str_cls(cidr)
+#             self._native = value
+#         return self._native
 
-    def __ne__(self, other):
-        return not self == other
+#     def __ne__(self, other):
+#         return not self == other
 
-    def __eq__(self, other):
-        """
-        :param other:
-            Another IPAddress object
+#     def __eq__(self, other):
+#         """
+#         :param other:
+#             Another IPAddress object
 
-        :return:
-            A boolean
-        """
+#         :return:
+#             A boolean
+#         """
 
-        if not isinstance(other, IPAddress):
-            return False
+#         if not isinstance(other, IPAddress):
+#             return False
 
-        return self.__bytes__() == other.__bytes__()
+#         return self.__bytes__() == other.__bytes__()
 
 
 class Attribute(Sequence):
@@ -1419,9 +1434,9 @@ class GeneralName(Choice):
         ('x400_address', ORAddress, {'implicit': 3}),
         ('directory_name', Name, {'explicit': 4}),
         ('edi_party_name', EDIPartyName, {'implicit': 5}),
-        ('uniform_resource_identifier', URI, {'implicit': 6}),
-        ('ip_address', IPAddress, {'implicit': 7}),
-        ('registered_id', ObjectIdentifier, {'implicit': 8}),
+        # ('uniform_resource_identifier', URI, {'implicit': 6}),
+        # ('ip_address', IPAddress, {'implicit': 7}),
+        ('registered_id', ObjectIdentifier, {'implicit': 6}),
     ]
 
     def __ne__(self, other):
@@ -2873,71 +2888,71 @@ class Certificate(Sequence):
 
         return ' '.join('%02X' % c for c in bytes_to_list(self.sha256))
 
-    def is_valid_domain_ip(self, domain_ip):
-        """
-        Check if a domain name or IP address is valid according to the
-        certificate
+    # def is_valid_domain_ip(self, domain_ip):
+    #     """
+    #     Check if a domain name or IP address is valid according to the
+    #     certificate
 
-        :param domain_ip:
-            A unicode string of a domain name or IP address
+    #     :param domain_ip:
+    #         A unicode string of a domain name or IP address
 
-        :return:
-            A boolean - if the domain or IP is valid for the certificate
-        """
+    #     :return:
+    #         A boolean - if the domain or IP is valid for the certificate
+    #     """
 
-        if not isinstance(domain_ip, str_cls):
-            raise TypeError(unwrap(
-                '''
-                domain_ip must be a unicode string, not %s
-                ''',
-                type_name(domain_ip)
-            ))
+    #     if not isinstance(domain_ip, str_cls):
+    #         raise TypeError(unwrap(
+    #             '''
+    #             domain_ip must be a unicode string, not %s
+    #             ''',
+    #             type_name(domain_ip)
+    #         ))
 
-        encoded_domain_ip = domain_ip.encode('idna').decode('ascii').lower()
+    #     encoded_domain_ip = domain_ip.encode('idna').decode('ascii').lower()
 
-        is_ipv6 = encoded_domain_ip.find(':') != -1
-        is_ipv4 = not is_ipv6 and re.match('^\\d+\\.\\d+\\.\\d+\\.\\d+$', encoded_domain_ip)
-        is_domain = not is_ipv6 and not is_ipv4
+    #     is_ipv6 = encoded_domain_ip.find(':') != -1
+    #     is_ipv4 = not is_ipv6 and re.match('^\\d+\\.\\d+\\.\\d+\\.\\d+$', encoded_domain_ip)
+    #     is_domain = not is_ipv6 and not is_ipv4
 
-        # Handle domain name checks
-        if is_domain:
-            if not self.valid_domains:
-                return False
+    #     # Handle domain name checks
+    #     if is_domain:
+    #         if not self.valid_domains:
+    #             return False
 
-            domain_labels = encoded_domain_ip.split('.')
+    #         domain_labels = encoded_domain_ip.split('.')
 
-            for valid_domain in self.valid_domains:
-                encoded_valid_domain = valid_domain.encode('idna').decode('ascii').lower()
-                valid_domain_labels = encoded_valid_domain.split('.')
+    #         for valid_domain in self.valid_domains:
+    #             encoded_valid_domain = valid_domain.encode('idna').decode('ascii').lower()
+    #             valid_domain_labels = encoded_valid_domain.split('.')
 
-                # The domain must be equal in label length to match
-                if len(valid_domain_labels) != len(domain_labels):
-                    continue
+    #             # The domain must be equal in label length to match
+    #             if len(valid_domain_labels) != len(domain_labels):
+    #                 continue
 
-                if valid_domain_labels == domain_labels:
-                    return True
+    #             if valid_domain_labels == domain_labels:
+    #                 return True
 
-                is_wildcard = self._is_wildcard_domain(encoded_valid_domain)
-                if is_wildcard and self._is_wildcard_match(domain_labels, valid_domain_labels):
-                    return True
+    #             is_wildcard = self._is_wildcard_domain(encoded_valid_domain)
+    #             if is_wildcard and self._is_wildcard_match(domain_labels, valid_domain_labels):
+    #                 return True
 
-            return False
+    #         return False
 
-        # Handle IP address checks
-        if not self.valid_ips:
-            return False
+    #     # Handle IP address checks
+    #     if not self.valid_ips:
+    #         return False
 
-        family = socket.AF_INET if is_ipv4 else socket.AF_INET6
-        normalized_ip = inet_pton(family, encoded_domain_ip)
+    #     family = socket.AF_INET if is_ipv4 else socket.AF_INET6
+    #     normalized_ip = inet_pton(family, encoded_domain_ip)
 
-        for valid_ip in self.valid_ips:
-            valid_family = socket.AF_INET if valid_ip.find('.') != -1 else socket.AF_INET6
-            normalized_valid_ip = inet_pton(valid_family, valid_ip)
+    #     for valid_ip in self.valid_ips:
+    #         valid_family = socket.AF_INET if valid_ip.find('.') != -1 else socket.AF_INET6
+    #         normalized_valid_ip = inet_pton(valid_family, valid_ip)
 
-            if normalized_valid_ip == normalized_ip:
-                return True
+    #         if normalized_valid_ip == normalized_ip:
+    #             return True
 
-        return False
+    #     return False
 
     def _is_wildcard_domain(self, domain):
         """

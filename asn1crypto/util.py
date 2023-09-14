@@ -23,14 +23,14 @@ import sys
 from datetime import datetime, date, timedelta, tzinfo
 
 from ._errors import unwrap
-from ._iri import iri_to_uri, uri_to_iri  # noqa
-from ._ordereddict import OrderedDict  # noqa
+# from ._iri import iri_to_uri, uri_to_iri  # noqa
+# from ._ordereddict import OrderedDict  # noqa
 from ._types import type_name
 
-if sys.platform == 'win32':
-    from ._inet import inet_ntop, inet_pton
-else:
-    from socket import inet_ntop, inet_pton  # noqa
+# if sys.platform == 'win32':
+#     from ._inet import inet_ntop, inet_pton
+# else:
+#     from socket import inet_ntop, inet_pton  # noqa
 
 
 # Python 2
